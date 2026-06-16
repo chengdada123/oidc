@@ -7,16 +7,48 @@ on:
   pull_request:
 
 jobs:
-  build:
+  docker-smoke:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
+      - name: Build image
+        run: docker build -t oidc-bridge:ci .
 
-      - name: Build
-        run: go build ./cmd/bridge
+      - name: Prepare env file
+        run: |
+          cp .env.example .env
+          sed -i 's#^BASE_URL=.*#BASE_URL=http://127.0.0.1:8080#' .env
+          sed -i 's#^SESSION_SECRET=.*#SESSION_SECRET=ci-session-secret#' .env
+          sed -i 's#^ADMIN_PASSWORD=.*#ADMIN_PASSWORD=ci-admin-password#' .env
+          sed -i 's#^VPS8_OIDC_ISSUER=.*#VPS8_OIDC_ISSUER=#' .env
+          sed -i 's#^VPS8_OIDC_CLIENT_ID=.*#VPS8_OIDC_CLIENT_ID=#' .env
+          sed -i 's#^VPS8_OIDC_CLIENT_SECRET=.*#VPS8_OIDC_CLIENT_SECRET=#' .env
+
+      - name: Run container
+        run: |
+          mkdir -p data
+          docker run -d --name oidc-bridge-ci --env-file .env -p 8080:8080 -v "$PWD/data:/app/data" oidc-bridge:ci
+
+      - name: Wait for service
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs oidc-bridge-ci
+          exit 1
+
+      - name: Smoke test discovery
+        run: curl -fsS http://127.0.0.1:8080/.well-known/openid-configuration
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker logs oidc-bridge-ci
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f oidc-bridge-ci || true
