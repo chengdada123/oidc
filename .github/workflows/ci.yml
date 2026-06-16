@@ -47,11 +47,16 @@ jobs:
 
       - name: Smoke test admin login
         run: |
-          curl -fsS -c cookies.txt -b cookies.txt -L \
+          headers=$(mktemp)
+          curl -sS -D "$headers" -o /dev/null \
+            -c cookies.txt -b cookies.txt \
             -X POST \
             -H 'Content-Type: application/x-www-form-urlencoded' \
             --data 'password=ci-admin-password' \
-            http://127.0.0.1:8080/admin/login > admin.html
+            http://127.0.0.1:8080/admin/login
+          grep -E 'HTTP/1\.[01] 302' "$headers"
+          curl -fsS -c cookies.txt -b cookies.txt \
+            http://127.0.0.1:8080/admin > admin.html
           grep -q '管理后台' admin.html
 
       - name: Smoke test OIDC start route
