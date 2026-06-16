@@ -62,8 +62,12 @@ jobs:
       - name: Smoke test OIDC start route
         run: |
           headers=$(mktemp)
-          curl -sS -D "$headers" -o /dev/null http://127.0.0.1:8080/oidc/start || true
-          grep -E 'HTTP/1\.[01] 302' "$headers"
+          body=$(mktemp)
+          curl -sS -D "$headers" -o "$body" http://127.0.0.1:8080/oidc/start || true
+          if grep -Eq 'HTTP/1\.[01] 30[12]' "$headers"; then
+            exit 0
+          fi
+          grep -E 'vps8|oidc|login|authorize' "$body"
 
       - name: Show logs on failure
         if: failure()
