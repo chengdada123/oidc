@@ -19,16 +19,6 @@ It solves a specific problem: one real upstream account needs to present differe
 - User login flow is: upstream OIDC login -> user console -> select mapped email -> downstream app login
 - Email identities are globally unique
 
-## Example Flow
-
-1. A user signs in to OIDC Bridge using the upstream OIDC provider.
-2. The user creates `bbs@vps8.bond` in the user console.
-3. The `vps8.bond` domain is bound to the `bbs` application.
-4. The user clicks `Use this email to sign in`.
-5. OIDC Bridge sends the user to the target application's OIDC login entrypoint.
-6. The target application starts a normal OIDC authorization request against OIDC Bridge.
-7. OIDC Bridge returns claims for the selected mapped email identity.
-
 ## Features
 
 - Upstream OIDC login for end users
