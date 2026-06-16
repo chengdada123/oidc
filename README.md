@@ -172,6 +172,7 @@ This project is usable, but still young. The main architecture is in place and t
 - broader OIDC interoperability testing
 - deployment defaults
 - audit/logging and operational polish
+- CI coverage for container startup and admin login
 
 ## License
 
