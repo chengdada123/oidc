@@ -1,0 +1,21 @@
+{{ define "home.html" }}
+{{ template "base" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="card">
+  <h1>OIDC Bridge</h1>
+  <p class="muted">用户必须通过 VPS8 OIDC 登录后进入用户控制台，创建域名邮箱，并选择某个邮箱登录目标地址。</p>
+  {{ if .OIDCReady }}
+  <div class="actions">
+    <a class="btn btn-primary" href="/oidc/start">用户：使用 VPS8 登录</a>
+    <a class="btn" href="/admin/login">管理员入口（密码登录）</a>
+  </div>
+  {{ else }}
+  <p class="error">当前还未配置 VPS8 OIDC。管理员仍可先登录后台，配置邮箱域名后缀、目标地址和邮箱数量上限。</p>
+  <div class="actions">
+    <a class="btn" href="/admin/login">管理员入口（密码登录）</a>
+  </div>
+  {{ end }}
+</div>
+{{ end }}

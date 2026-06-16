@@ -1,0 +1,7 @@
+data/
+.env
+bridge.exe
+bridge.exe~
+oidc-bridge
+*.db
+*.db-*

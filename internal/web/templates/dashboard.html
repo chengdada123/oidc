@@ -1,0 +1,31 @@
+{{ define "dashboard.html" }}{{ template "base" . }}{{ end }}
+{{ define "content" }}
+<div class="card"><div class="topbar"><div><h1>用户控制台</h1><p class="muted">已登录：{{ .User.Email }} · 上限：{{ .EmailLimit }} 个邮箱</p></div><div class="actions"><a class="btn" href="/logout">退出</a></div></div></div>
+{{ if .Error }}<div class="card"><div class="muted">{{ .Error }}</div></div>{{ end }}
+
+<div class="card">
+  <h2>创建域名邮箱</h2>
+  <form method="post" action="/dashboard/emails">
+    <div class="grid">
+      <div><label>域名后缀</label><select name="domain_id" required><option value="">请选择</option>{{ range .Domains }}<option value="{{ .ID }}">@{{ .Domain }}</option>{{ end }}</select></div>
+      <div><label>邮箱前缀</label><input name="local_part" placeholder="alice" required></div>
+      <div><label>备注</label><input name="note" placeholder="可选备注"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" type="submit">创建邮箱</button></div>
+  </form>
+</div>
+
+<div class="card"><h2>我的邮箱</h2><div class="table-scroll"><table><thead><tr><th>ID</th><th>邮箱</th><th>域名</th><th>对应应用</th><th>备注</th><th>操作</th></tr></thead><tbody>
+{{ range .Emails }}
+<tr>
+  <td>{{ .ID }}</td><td>{{ .Email }}</td><td>{{ .Domain }}</td><td>{{ .TargetName }}</td><td>{{ .Note }}</td>
+  <td>
+    <div class="actions">
+      <a class="btn btn-sm btn-primary" href="/auth/start?email_id={{ .ID }}">使用此邮箱登录</a>
+      <form method="post" action="/dashboard/emails/{{ .ID }}/delete" style="display:inline"><button class="btn btn-sm btn-danger" type="submit">释放</button></form>
+    </div>
+  </td>
+</tr>
+{{ else }}<tr><td colspan="6" class="muted">还没有邮箱</td></tr>{{ end }}
+</tbody></table></div></div>
+{{ end }}

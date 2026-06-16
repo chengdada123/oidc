@@ -1,0 +1,26 @@
+{{ define "authorize_select.html" }}{{ template "base" . }}{{ end }}
+{{ define "content" }}
+<div class="card">
+  <h1>选择登录邮箱</h1>
+  <p class="muted">应用：{{ .Target.Name }}。请选择本次要向该应用输出的域名邮箱身份。</p>
+</div>
+<div class="card">
+  <form method="post" action="/oauth/authorize/select">
+    <input type="hidden" name="client_id" value="{{ .ClientID }}">
+    <input type="hidden" name="redirect_uri" value="{{ .RedirectURI }}">
+    <input type="hidden" name="response_type" value="code">
+    <input type="hidden" name="scope" value="{{ .Scope }}">
+    <input type="hidden" name="state" value="{{ .State }}">
+    <input type="hidden" name="nonce" value="{{ .Nonce }}">
+    <div class="grid">
+      <div>
+        <label>邮箱</label>
+        <select name="email_id" required>
+          {{ range .Emails }}<option value="{{ .ID }}">{{ .Email }}</option>{{ end }}
+        </select>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:12px"><button class="btn btn-primary" type="submit">继续授权</button><a class="btn" href="/dashboard">返回控制台</a></div>
+  </form>
+</div>
+{{ end }}

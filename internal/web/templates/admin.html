@@ -1,0 +1,56 @@
+{{ define "admin.html" }}{{ template "base" . }}{{ end }}
+{{ define "content" }}
+<div class="card"><div class="topbar"><div><h1>管理后台</h1><p class="muted">管理应用、域名与邮箱规则。域名唯一归属应用，域名用于创建域名邮箱。</p></div><div class="actions"><a class="btn" href="/">首页</a><a class="btn" href="/admin/logout">退出</a></div></div></div>
+
+<div class="card">
+  <h2>OIDC Provider 接入说明</h2>
+  <div class="table-scroll"><table><tbody>
+    <tr><th>Discovery</th><td><code>https://vps8.cc.cd/.well-known/openid-configuration</code></td></tr>
+    <tr><th>Authorize</th><td><code>https://vps8.cc.cd/oauth/authorize</code></td></tr>
+    <tr><th>Token</th><td><code>https://vps8.cc.cd/oauth/token</code></td></tr>
+    <tr><th>Userinfo</th><td><code>https://vps8.cc.cd/oauth/userinfo</code></td></tr>
+    <tr><th>JWKS</th><td><code>https://vps8.cc.cd/oauth/jwks.json</code></td></tr>
+    <tr><th>Scope</th><td><code>openid profile email</code></td></tr>
+    <tr><th>Client Auth</th><td><code>client_secret_post</code>, <code>client_secret_basic</code></td></tr>
+  </tbody></table></div>
+</div>
+
+<div class="card">
+  <h2>全局设置</h2>
+  <form method="post" action="/admin/settings/email-limit"><div class="grid"><div><label>每个用户最多可创建邮箱数量</label><input type="number" min="1" name="email_limit" value="{{ .EmailLimit }}" required></div></div><div style="margin-top:12px"><button class="btn btn-primary" type="submit">保存设置</button></div></form>
+</div>
+
+<div class="card">
+  <h2>新建应用</h2>
+  <form method="post" action="/admin/targets">
+    <div class="grid">
+      <div><label>应用名称</label><input name="name" placeholder="论坛 / 系统名称" required></div>
+      <div><label>应用登录入口</label><input name="login_url" placeholder="https://app.example.com/auth/oidc" required></div>
+      <div><label>应用回调地址</label><input name="redirect_url" placeholder="https://app.example.com/auth/oidc/callback" required></div>
+      <div><label>启用</label><select name="enabled"><option value="1" selected>是</option><option value="0">否</option></select></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" type="submit">创建应用并生成 client_id/secret</button></div>
+  </form>
+</div>
+
+<div class="card"><h2>应用列表</h2><div class="table-scroll"><table><thead><tr><th>ID</th><th>名称</th><th>client_id</th><th>client_secret</th><th>登录入口</th><th>回调地址</th><th>启用</th><th>操作</th></tr></thead><tbody>
+{{ range .Targets }}<tr><td>{{ .ID }}</td><td>{{ .Name }}</td><td><code>{{ .ClientID }}</code></td><td><code>{{ .ClientSecret }}</code></td><td>{{ .LoginURL }}</td><td>{{ .RedirectURL }}</td><td>{{ if .Enabled }}是{{ else }}否{{ end }}</td><td><details><summary class="btn btn-sm">编辑</summary><form method="post" action="/admin/targets/{{ .ID }}" style="margin-top:8px"><div class="grid"><div><label>应用名称</label><input name="name" value="{{ .Name }}" required></div><div><label>client_id</label><input name="client_id" value="{{ .ClientID }}" required></div><div><label>client_secret</label><input name="client_secret" value="{{ .ClientSecret }}" required></div><div><label>登录入口</label><input name="login_url" value="{{ .LoginURL }}" required></div><div><label>回调地址</label><input name="redirect_url" value="{{ .RedirectURL }}" required></div><div><label>固定参数</label><input name="extra_params" value="{{ .ExtraParams }}"></div><div><label>启用</label><select name="enabled"><option value="1" {{ if .Enabled }}selected{{ end }}>是</option><option value="0" {{ if not .Enabled }}selected{{ end }}>否</option></select></div></div><div class="actions" style="margin-top:8px"><button class="btn btn-sm btn-primary" type="submit">保存</button></form><form method="post" action="/admin/targets/{{ .ID }}/reset-secret" style="display:inline"><button class="btn btn-sm" type="submit">重置 Secret</button></form><form method="post" action="/admin/targets/{{ .ID }}/delete" style="display:inline"><button class="btn btn-sm btn-danger" type="submit">删除</button></form></div></details></td></tr>{{ else }}<tr><td colspan="8" class="muted">暂无应用</td></tr>{{ end }}
+</tbody></table></div></div>
+
+<div class="card">
+  <h2>新建域名后缀</h2>
+  <form method="post" action="/admin/domains">
+    <div class="grid">
+      <div><label>域名后缀</label><input name="domain" placeholder="example.com" required></div>
+      <div><label>绑定应用</label><select name="target_id" required><option value="">请选择</option>{{ range .Targets }}<option value="{{ .ID }}">{{ .Name }}</option>{{ end }}</select></div>
+      <div><label>描述</label><input name="description" placeholder="用于创建域名邮箱"></div>
+      <div><label>启用</label><select name="enabled"><option value="1" selected>是</option><option value="0">否</option></select></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn btn-primary" type="submit">创建域名</button></div>
+  </form>
+</div>
+
+<div class="card"><h2>域名列表</h2><div class="table-scroll"><table><thead><tr><th>ID</th><th>域名</th><th>绑定应用</th><th>描述</th><th>启用</th><th>操作</th></tr></thead><tbody>
+{{ range .Domains }}{{ $domainTargetID := .TargetID }}<tr><td>{{ .ID }}</td><td>{{ .Domain }}</td><td>{{ .TargetName }}</td><td>{{ .Description }}</td><td>{{ if .Enabled }}是{{ else }}否{{ end }}</td><td><details><summary class="btn btn-sm">编辑</summary><form method="post" action="/admin/domains/{{ .ID }}" style="margin-top:8px"><div class="grid"><div><label>域名后缀</label><input name="domain" value="{{ .Domain }}" required></div><div><label>绑定应用</label><select name="target_id" required>{{ range $.Targets }}<option value="{{ .ID }}" {{ if eq .ID $domainTargetID }}selected{{ end }}>{{ .Name }}</option>{{ end }}</select></div><div><label>描述</label><input name="description" value="{{ .Description }}"></div><div><label>启用</label><select name="enabled"><option value="1" {{ if .Enabled }}selected{{ end }}>是</option><option value="0" {{ if not .Enabled }}selected{{ end }}>否</option></select></div></div><div class="actions" style="margin-top:8px"><button class="btn btn-sm btn-primary" type="submit">保存</button></form><form method="post" action="/admin/domains/{{ .ID }}/delete" style="display:inline"><button class="btn btn-sm btn-danger" type="submit">删除</button></form></div></details></td></tr>{{ else }}<tr><td colspan="6" class="muted">暂无域名</td></tr>{{ end }}
+</tbody></table></div></div>
+{{ end }}

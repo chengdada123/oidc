@@ -1,0 +1,14 @@
+{{ define "login.html" }}
+<!doctype html>
+<html><body>{{ template "content" . }}</body></html>
+{{ end }}
+{{ define "content" }}
+<div class="card">
+  <h1>OIDC Bridge</h1>
+  <p class="muted">通过 VPS8 OIDC 登录后，选择一个映射邮箱继续登录目标地址。</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="/oidc/start">使用 VPS8 登录</a>
+    <a class="btn" href="/admin/login">管理员入口</a>
+  </div>
+</div>
+{{ end }}
