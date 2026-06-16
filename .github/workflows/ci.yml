@@ -45,6 +45,15 @@ jobs:
       - name: Smoke test discovery
         run: curl -fsS http://127.0.0.1:8080/.well-known/openid-configuration
 
+      - name: Smoke test admin login
+        run: |
+          curl -fsS -c cookies.txt -b cookies.txt -L \
+            -X POST \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data 'password=ci-admin-password' \
+            http://127.0.0.1:8080/admin/login > admin.html
+          grep -q '管理后台' admin.html
+
       - name: Show logs on failure
         if: failure()
         run: docker logs oidc-bridge-ci
