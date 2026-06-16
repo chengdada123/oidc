@@ -22,9 +22,9 @@ jobs:
           sed -i 's#^BASE_URL=.*#BASE_URL=http://127.0.0.1:8080#' .env
           sed -i 's#^SESSION_SECRET=.*#SESSION_SECRET=ci-session-secret#' .env
           sed -i 's#^ADMIN_PASSWORD=.*#ADMIN_PASSWORD=ci-admin-password#' .env
-          sed -i 's#^VPS8_OIDC_ISSUER=.*#VPS8_OIDC_ISSUER=#' .env
-          sed -i 's#^VPS8_OIDC_CLIENT_ID=.*#VPS8_OIDC_CLIENT_ID=#' .env
-          sed -i 's#^VPS8_OIDC_CLIENT_SECRET=.*#VPS8_OIDC_CLIENT_SECRET=#' .env
+          sed -i 's#^VPS8_OIDC_ISSUER=.*#VPS8_OIDC_ISSUER=https://vps8.example.invalid/oidc#' .env
+          sed -i 's#^VPS8_OIDC_CLIENT_ID=.*#VPS8_OIDC_CLIENT_ID=ci-vps8-client-id#' .env
+          sed -i 's#^VPS8_OIDC_CLIENT_SECRET=.*#VPS8_OIDC_CLIENT_SECRET=ci-vps8-client-secret#' .env
 
       - name: Run container
         run: |
@@ -53,6 +53,12 @@ jobs:
             --data 'password=ci-admin-password' \
             http://127.0.0.1:8080/admin/login > admin.html
           grep -q '管理后台' admin.html
+
+      - name: Smoke test OIDC start route
+        run: |
+          headers=$(mktemp)
+          curl -sS -D "$headers" -o /dev/null http://127.0.0.1:8080/oidc/start || true
+          grep -E 'HTTP/1\.[01] 302' "$headers"
 
       - name: Show logs on failure
         if: failure()

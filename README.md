@@ -125,6 +125,20 @@ The default compose setup:
 - mounts `./data` for SQLite persistence
 - reads configuration from `.env`
 
+### Minimal Delivery Goal
+
+A deployer should be able to:
+
+1. copy `.env.example` to `.env`
+2. fill `BASE_URL`, `SESSION_SECRET`, `ADMIN_PASSWORD`
+3. fill upstream VPS8 OIDC values:
+   - `VPS8_OIDC_ISSUER`
+   - `VPS8_OIDC_CLIENT_ID`
+   - `VPS8_OIDC_CLIENT_SECRET`
+4. run `docker compose up -d --build`
+5. log into `/admin`
+6. use VPS8 account login in the user console
+
 ## Admin Setup
 
 In the admin backend you create downstream applications with:
