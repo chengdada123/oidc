@@ -2,7 +2,10 @@ package server
 
 import "oidc-bridge/internal/db"
 
-type HomeData struct { Title string; OIDCReady bool }
+type HomeData struct {
+	Title     string
+	OIDCReady bool
+}
 
 type DashboardEmailRow struct {
 	ID         int64
@@ -31,10 +34,14 @@ type DashboardData struct {
 	Error      string
 }
 
-type AdminLoginData struct { Title string; Error string }
+type AdminLoginData struct {
+	Title string
+	Error string
+}
 
 type AdminPageData struct {
 	Title      string
+	BaseURL    string
 	Domains    []AdminDomainRow
 	Targets    []db.Target
 	EmailLimit int

@@ -5,11 +5,11 @@
 <div class="card">
   <h2>OIDC Provider 接入说明</h2>
   <div class="table-scroll"><table><tbody>
-    <tr><th>Discovery</th><td><code>https://vps8.cc.cd/.well-known/openid-configuration</code></td></tr>
-    <tr><th>Authorize</th><td><code>https://vps8.cc.cd/oauth/authorize</code></td></tr>
-    <tr><th>Token</th><td><code>https://vps8.cc.cd/oauth/token</code></td></tr>
-    <tr><th>Userinfo</th><td><code>https://vps8.cc.cd/oauth/userinfo</code></td></tr>
-    <tr><th>JWKS</th><td><code>https://vps8.cc.cd/oauth/jwks.json</code></td></tr>
+    <tr><th>Discovery</th><td><code>{{ .BaseURL }}/.well-known/openid-configuration</code></td></tr>
+    <tr><th>Authorize</th><td><code>{{ .BaseURL }}/oauth/authorize</code></td></tr>
+    <tr><th>Token</th><td><code>{{ .BaseURL }}/oauth/token</code></td></tr>
+    <tr><th>Userinfo</th><td><code>{{ .BaseURL }}/oauth/userinfo</code></td></tr>
+    <tr><th>JWKS</th><td><code>{{ .BaseURL }}/oauth/jwks.json</code></td></tr>
     <tr><th>Scope</th><td><code>openid profile email</code></td></tr>
     <tr><th>Client Auth</th><td><code>client_secret_post</code>, <code>client_secret_basic</code></td></tr>
   </tbody></table></div>
