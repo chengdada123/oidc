@@ -141,10 +141,34 @@ func (s *Server) handleDeleteTarget(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin", http.StatusFound)
 }
 
+func (s *Server) handleAdminDeleteUserEmail(w http.ResponseWriter, r *http.Request) {
+	id := parseInt64(chi.URLParam(r, "id"))
+	if id > 0 {
+		_, _ = s.db.DB.Exec(`DELETE FROM user_emails WHERE id = ?`, id)
+	}
+	redirect := "/admin"
+	if qs := r.URL.RawQuery; qs != "" {
+		redirect += "?" + qs
+	}
+	http.Redirect(w, r, redirect, http.StatusFound)
+}
+
 func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 	domains, _ := s.db.ListDomains()
 	targets, _ := s.db.ListTargets()
-	allUserEmails, _ := s.db.ListAllUserEmails()
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	page, _ := strconv.Atoi(strings.TrimSpace(r.URL.Query().Get("page")))
+	if page < 1 {
+		page = 1
+	}
+	const pageSize = 20
+	total, _ := s.db.CountAdminUserEmails(q)
+	offset := (page - 1) * pageSize
+	if total > 0 && offset >= total {
+		page = (total + pageSize - 1) / pageSize
+		offset = (page - 1) * pageSize
+	}
+	allUserEmails, _ := s.db.ListAdminUserEmails(q, pageSize, offset)
 	limit, _ := s.db.GetEmailLimitPerUser()
 	targetNames := map[int64]string{}
 	for _, t := range targets {
@@ -168,5 +192,17 @@ func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 		}
 		emailRows = append(emailRows, AdminUserEmailRow{ID: e.ID, UserID: user.ID, UserSub: user.Sub, UserEmail: user.Email, UserName: user.Name, Email: e.Email, LocalPart: e.LocalPart, Note: e.Note, Domain: domain.Domain, TargetName: targetNames[domain.TargetID], Enabled: e.Enabled})
 	}
-	s.renderer.Render(w, "admin.html", AdminPageData{Title: "Admin", BaseURL: strings.TrimRight(s.cfg.BaseURL, "/"), Domains: rows, Targets: targets, UserEmails: emailRows, EmailLimit: limit})
+	pages := 0
+	if total > 0 {
+		pages = (total + pageSize - 1) / pageSize
+	}
+	prevPage := 0
+	if page > 1 {
+		prevPage = page - 1
+	}
+	nextPage := 0
+	if pages > 0 && page < pages {
+		nextPage = page + 1
+	}
+	s.renderer.Render(w, "admin.html", AdminPageData{Title: "Admin", BaseURL: strings.TrimRight(s.cfg.BaseURL, "/"), Domains: rows, Targets: targets, UserEmails: emailRows, EmailLimit: limit, UserEmailQuery: q, UserEmailPage: page, UserEmailPages: pages, UserEmailTotal: total, UserEmailPrev: prevPage, UserEmailNext: nextPage})
 }

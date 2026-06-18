@@ -54,13 +54,19 @@ type AdminLoginData struct {
 }
 
 type AdminPageData struct {
-	Title      string
-	BaseURL    string
-	Domains    []AdminDomainRow
-	Targets    []db.Target
-	UserEmails []AdminUserEmailRow
-	EmailLimit int
-	Error      string
+	Title          string
+	BaseURL        string
+	Domains        []AdminDomainRow
+	Targets        []db.Target
+	UserEmails     []AdminUserEmailRow
+	EmailLimit     int
+	UserEmailQuery string
+	UserEmailPage  int
+	UserEmailPages int
+	UserEmailTotal int
+	UserEmailPrev  int
+	UserEmailNext  int
+	Error          string
 }
 
 type AuthorizeSelectData struct {

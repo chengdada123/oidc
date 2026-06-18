@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -160,6 +161,41 @@ func (s *Store) ListUserEmails(userID int64) ([]UserEmail, error) {
 }
 func (s *Store) ListAllUserEmails() ([]UserEmail, error) {
 	rows, err := s.DB.Query(`SELECT id, user_id, domain_id, local_part, email, note, enabled, created_at, updated_at FROM user_emails ORDER BY id ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []UserEmail
+	for rows.Next() {
+		var e UserEmail
+		var enabled int
+		if err := rows.Scan(&e.ID, &e.UserID, &e.DomainID, &e.LocalPart, &e.Email, &e.Note, &enabled, &e.CreatedAt, &e.UpdatedAt); err != nil {
+			return nil, err
+		}
+		e.Enabled = enabled == 1
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+func adminUserEmailFilter(query string) (string, []any) {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return "", nil
+	}
+	like := "%" + query + "%"
+	return ` WHERE ue.email LIKE ? OR ue.local_part LIKE ? OR ue.note LIKE ? OR u.email LIKE ? OR u.name LIKE ? OR d.domain LIKE ? OR t.name LIKE ?`, []any{like, like, like, like, like, like, like}
+}
+func (s *Store) CountAdminUserEmails(query string) (int, error) {
+	where, args := adminUserEmailFilter(query)
+	row := s.DB.QueryRow(`SELECT COUNT(*) FROM user_emails ue JOIN users u ON u.id = ue.user_id JOIN domains d ON d.id = ue.domain_id LEFT JOIN targets t ON t.id = d.target_id`+where, args...)
+	var total int
+	err := row.Scan(&total)
+	return total, err
+}
+func (s *Store) ListAdminUserEmails(query string, limit, offset int) ([]UserEmail, error) {
+	where, args := adminUserEmailFilter(query)
+	args = append(args, limit, offset)
+	rows, err := s.DB.Query(`SELECT ue.id, ue.user_id, ue.domain_id, ue.local_part, ue.email, ue.note, ue.enabled, ue.created_at, ue.updated_at FROM user_emails ue JOIN users u ON u.id = ue.user_id JOIN domains d ON d.id = ue.domain_id LEFT JOIN targets t ON t.id = d.target_id`+where+` ORDER BY ue.id DESC LIMIT ? OFFSET ?`, args...)
 	if err != nil {
 		return nil, err
 	}
