@@ -50,18 +50,18 @@ func GenerateBrokerKeypair() (*BrokerKeypair, error) {
 func BuildDiscovery(issuer string) map[string]any {
 	issuer = strings.TrimRight(issuer, "/")
 	return map[string]any{
-		"issuer": issuer,
-		"authorization_endpoint": issuer + "/oauth/authorize",
-		"token_endpoint": issuer + "/oauth/token",
-		"userinfo_endpoint": issuer + "/oauth/userinfo",
-		"jwks_uri": issuer + "/oauth/jwks.json",
-		"response_types_supported": []string{"code"},
-		"grant_types_supported": []string{"authorization_code"},
-		"subject_types_supported": []string{"public"},
+		"issuer":                                issuer,
+		"authorization_endpoint":                issuer + "/oauth/authorize",
+		"token_endpoint":                        issuer + "/oauth/token",
+		"userinfo_endpoint":                     issuer + "/oauth/userinfo",
+		"jwks_uri":                              issuer + "/oauth/jwks.json",
+		"response_types_supported":              []string{"code"},
+		"grant_types_supported":                 []string{"authorization_code"},
+		"subject_types_supported":               []string{"public"},
 		"id_token_signing_alg_values_supported": []string{"RS256"},
-		"scopes_supported": []string{"openid", "profile", "email"},
+		"scopes_supported":                      []string{"openid", "profile", "email"},
 		"token_endpoint_auth_methods_supported": []string{"client_secret_post", "client_secret_basic"},
-		"claims_supported": []string{"sub", "name", "email", "email_verified", "given_name", "family_name", "preferred_username"},
+		"claims_supported":                      []string{"sub", "name", "email", "email_verified", "given_name", "family_name", "preferred_username"},
 	}
 }
 
@@ -111,18 +111,18 @@ func SignRS256JWT(privatePEM string, payload map[string]any, kid string) (string
 	return signingInput + "." + base64.RawURLEncoding.EncodeToString(sig), nil
 }
 
-func BuildIDToken(issuer, audience, nonce, sub, email, name, privatePEM, kid string) (string, error) {
+func BuildIDToken(issuer, audience, nonce, sub, email, preferredUsername, name, privatePEM, kid string) (string, error) {
 	now := time.Now().Unix()
 	payload := map[string]any{
-		"iss": issuer,
-		"aud": audience,
-		"sub": sub,
-		"email": email,
-		"email_verified": true,
-		"preferred_username": email,
-		"name": name,
-		"iat": now,
-		"exp": now + 3600,
+		"iss":                issuer,
+		"aud":                audience,
+		"sub":                sub,
+		"email":              email,
+		"email_verified":     true,
+		"preferred_username": preferredUsername,
+		"name":               name,
+		"iat":                now,
+		"exp":                now + 3600,
 	}
 	if nonce != "" {
 		payload["nonce"] = nonce
