@@ -25,6 +25,20 @@ type AdminDomainRow struct {
 	TargetName  string
 }
 
+type AdminUserEmailRow struct {
+	ID         int64
+	UserID     int64
+	UserSub    string
+	UserEmail  string
+	UserName   string
+	Email      string
+	LocalPart  string
+	Note       string
+	Domain     string
+	TargetName string
+	Enabled    bool
+}
+
 type DashboardData struct {
 	Title      string
 	User       *db.User
@@ -44,6 +58,7 @@ type AdminPageData struct {
 	BaseURL    string
 	Domains    []AdminDomainRow
 	Targets    []db.Target
+	UserEmails []AdminUserEmailRow
 	EmailLimit int
 	Error      string
 }

@@ -144,14 +144,29 @@ func (s *Server) handleDeleteTarget(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 	domains, _ := s.db.ListDomains()
 	targets, _ := s.db.ListTargets()
+	allUserEmails, _ := s.db.ListAllUserEmails()
 	limit, _ := s.db.GetEmailLimitPerUser()
 	targetNames := map[int64]string{}
 	for _, t := range targets {
 		targetNames[t.ID] = t.Name
 	}
+	domainByID := map[int64]db.Domain{}
 	var rows []AdminDomainRow
 	for _, d := range domains {
+		domainByID[d.ID] = d
 		rows = append(rows, AdminDomainRow{ID: d.ID, Domain: d.Domain, Description: d.Description, Enabled: d.Enabled, TargetID: d.TargetID, TargetName: targetNames[d.TargetID]})
 	}
-	s.renderer.Render(w, "admin.html", AdminPageData{Title: "Admin", BaseURL: strings.TrimRight(s.cfg.BaseURL, "/"), Domains: rows, Targets: targets, EmailLimit: limit})
+	var emailRows []AdminUserEmailRow
+	for _, e := range allUserEmails {
+		user, err := s.db.GetUserByID(e.UserID)
+		if err != nil {
+			continue
+		}
+		domain, ok := domainByID[e.DomainID]
+		if !ok {
+			continue
+		}
+		emailRows = append(emailRows, AdminUserEmailRow{ID: e.ID, UserID: user.ID, UserSub: user.Sub, UserEmail: user.Email, UserName: user.Name, Email: e.Email, LocalPart: e.LocalPart, Note: e.Note, Domain: domain.Domain, TargetName: targetNames[domain.TargetID], Enabled: e.Enabled})
+	}
+	s.renderer.Render(w, "admin.html", AdminPageData{Title: "Admin", BaseURL: strings.TrimRight(s.cfg.BaseURL, "/"), Domains: rows, Targets: targets, UserEmails: emailRows, EmailLimit: limit})
 }
