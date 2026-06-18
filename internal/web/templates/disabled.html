@@ -1,0 +1,14 @@
+{{ define "disabled.html" }}
+{{ template "base" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="card">
+  <h1>{{ .Title }}</h1>
+  <p class="error">{{ .Message }}</p>
+  <div class="actions">
+    <a class="btn" href="/logout">退出登录</a>
+    <a class="btn" href="/">返回首页</a>
+  </div>
+</div>
+{{ end }}

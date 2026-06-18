@@ -7,6 +7,11 @@ type HomeData struct {
 	OIDCReady bool
 }
 
+type DisabledData struct {
+	Title   string
+	Message string
+}
+
 type DashboardEmailRow struct {
 	ID         int64
 	Email      string

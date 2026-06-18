@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -23,6 +24,8 @@ type Server struct {
 	renderer *web.Renderer
 	sessions sessions.Store
 }
+
+var errUserDisabled = errors.New("user disabled")
 
 func NewRouter(cfg *config.Config, store *db.Store, provider *oidcbridge.Provider, renderer *web.Renderer, sessionStore sessions.Store) http.Handler {
 	s := &Server{cfg: cfg, db: store, oidc: provider, renderer: renderer, sessions: sessionStore}
@@ -77,13 +80,18 @@ func (s *Server) currentUser(r *http.Request) (*db.User, error) {
 		return nil, err
 	}
 	if user.Disabled {
-		return nil, sql.ErrNoRows
+		return nil, errUserDisabled
 	}
 	return user, nil
 }
 func (s *Server) requireUser(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if _, err := s.currentUser(r); err != nil {
+			if errors.Is(err, errUserDisabled) {
+				w.WriteHeader(http.StatusForbidden)
+				s.renderer.Render(w, "disabled.html", DisabledData{Title: "账号已禁用", Message: "该账户已被管理员禁用，无法继续使用此服务。"})
+				return
+			}
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
