@@ -197,6 +197,10 @@ func (s *Server) handleProviderToken(w http.ResponseWriter, r *http.Request) {
 	_ = s.db.MarkBrokerCodeUsed(brokerCode.ID)
 	user, _ := s.db.GetUserByID(brokerCode.UserID)
 	userEmail, _ := s.db.GetUserEmailByID(brokerCode.UserEmailID)
+	if user == nil || user.Disabled || userEmail == nil || !userEmail.Enabled {
+		http.Error(w, "user or email is disabled", http.StatusForbidden)
+		return
+	}
 	preferredUsername := brokerPreferredUsername(userEmail.Email)
 	accessToken := randomCode()
 	_ = s.db.CreateBrokerToken(accessToken, target.ID, user.ID, userEmail.ID, brokerCode.Scope)
@@ -226,7 +230,10 @@ func (s *Server) handleProviderUserinfo(w http.ResponseWriter, r *http.Request) 
 	}
 	user, _ := s.db.GetUserByID(brokerToken.UserID)
 	userEmail, _ := s.db.GetUserEmailByID(brokerToken.UserEmailID)
-	_ = user
+	if user == nil || user.Disabled || userEmail == nil || !userEmail.Enabled {
+		http.Error(w, "user or email is disabled", http.StatusForbidden)
+		return
+	}
 	preferredUsername := brokerPreferredUsername(userEmail.Email)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_ = json.NewEncoder(w).Encode(map[string]any{"sub": brokerSubject(brokerToken.TargetID, userEmail.Email), "email": userEmail.Email, "email_verified": true, "preferred_username": preferredUsername, "name": preferredUsername})

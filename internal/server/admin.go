@@ -153,6 +153,30 @@ func (s *Server) handleAdminDeleteUserEmail(w http.ResponseWriter, r *http.Reque
 	http.Redirect(w, r, redirect, http.StatusFound)
 }
 
+func (s *Server) handleAdminDisableUser(w http.ResponseWriter, r *http.Request) {
+	id := parseInt64(chi.URLParam(r, "id"))
+	if id > 0 {
+		_ = s.db.SetUserDisabled(id, true)
+	}
+	redirect := "/admin"
+	if qs := r.URL.RawQuery; qs != "" {
+		redirect += "?" + qs
+	}
+	http.Redirect(w, r, redirect, http.StatusFound)
+}
+
+func (s *Server) handleAdminEnableUser(w http.ResponseWriter, r *http.Request) {
+	id := parseInt64(chi.URLParam(r, "id"))
+	if id > 0 {
+		_ = s.db.SetUserDisabled(id, false)
+	}
+	redirect := "/admin"
+	if qs := r.URL.RawQuery; qs != "" {
+		redirect += "?" + qs
+	}
+	http.Redirect(w, r, redirect, http.StatusFound)
+}
+
 func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 	domains, _ := s.db.ListDomains()
 	targets, _ := s.db.ListTargets()
@@ -190,7 +214,7 @@ func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			continue
 		}
-		emailRows = append(emailRows, AdminUserEmailRow{ID: e.ID, UserID: user.ID, UserSub: user.Sub, UserEmail: user.Email, UserName: user.Name, Email: e.Email, LocalPart: e.LocalPart, Note: e.Note, Domain: domain.Domain, TargetName: targetNames[domain.TargetID], Enabled: e.Enabled})
+		emailRows = append(emailRows, AdminUserEmailRow{ID: e.ID, UserID: user.ID, UserSub: user.Sub, UserEmail: user.Email, UserName: user.Name, UserDisabled: user.Disabled, Email: e.Email, LocalPart: e.LocalPart, Note: e.Note, Domain: domain.Domain, TargetName: targetNames[domain.TargetID], Enabled: e.Enabled})
 	}
 	pages := 0
 	if total > 0 {

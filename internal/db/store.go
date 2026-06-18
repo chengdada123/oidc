@@ -11,7 +11,7 @@ import (
 
 func (s *Store) UpsertUser(sub, email, name string) (*User, error) {
 	var existing User
-	err := s.DB.QueryRow(`SELECT id, sub, email, name, created_at, updated_at FROM users WHERE sub = ?`, sub).Scan(&existing.ID, &existing.Sub, &existing.Email, &existing.Name, &existing.CreatedAt, &existing.UpdatedAt)
+	err := s.DB.QueryRow(`SELECT id, sub, email, name, disabled, created_at, updated_at FROM users WHERE sub = ?`, sub).Scan(&existing.ID, &existing.Sub, &existing.Email, &existing.Name, &existing.Disabled, &existing.CreatedAt, &existing.UpdatedAt)
 	if err == nil {
 		ts := now()
 		_, err = s.DB.Exec(`UPDATE users SET email = ?, name = ?, updated_at = ? WHERE id = ?`, email, name, ts, existing.ID)
@@ -25,16 +25,16 @@ func (s *Store) UpsertUser(sub, email, name string) (*User, error) {
 		return nil, err
 	}
 	ts := now()
-	res, err := s.DB.Exec(`INSERT INTO users (sub, email, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, sub, email, name, ts, ts)
+	res, err := s.DB.Exec(`INSERT INTO users (sub, email, name, disabled, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)`, sub, email, name, ts, ts)
 	if err != nil {
 		return nil, err
 	}
 	id, _ := res.LastInsertId()
-	return &User{ID: id, Sub: sub, Email: email, Name: name, CreatedAt: ts, UpdatedAt: ts}, nil
+	return &User{ID: id, Sub: sub, Email: email, Name: name, Disabled: false, CreatedAt: ts, UpdatedAt: ts}, nil
 }
 func (s *Store) GetUserBySub(sub string) (*User, error) {
 	var u User
-	err := s.DB.QueryRow(`SELECT id, sub, email, name, created_at, updated_at FROM users WHERE sub = ?`, sub).Scan(&u.ID, &u.Sub, &u.Email, &u.Name, &u.CreatedAt, &u.UpdatedAt)
+	err := s.DB.QueryRow(`SELECT id, sub, email, name, disabled, created_at, updated_at FROM users WHERE sub = ?`, sub).Scan(&u.ID, &u.Sub, &u.Email, &u.Name, &u.Disabled, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (s *Store) GetUserBySub(sub string) (*User, error) {
 }
 func (s *Store) GetUserByID(id int64) (*User, error) {
 	var u User
-	err := s.DB.QueryRow(`SELECT id, sub, email, name, created_at, updated_at FROM users WHERE id = ?`, id).Scan(&u.ID, &u.Sub, &u.Email, &u.Name, &u.CreatedAt, &u.UpdatedAt)
+	err := s.DB.QueryRow(`SELECT id, sub, email, name, disabled, created_at, updated_at FROM users WHERE id = ?`, id).Scan(&u.ID, &u.Sub, &u.Email, &u.Name, &u.Disabled, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -239,6 +239,10 @@ func (s *Store) GetUserEmailByID(id int64) (*UserEmail, error) {
 }
 func (s *Store) CreateUserEmail(userID, domainID int64, localPart, email, note string, enabled bool) error {
 	_, err := s.DB.Exec(`INSERT INTO user_emails (user_id, domain_id, local_part, email, note, enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, userID, domainID, localPart, email, note, boolInt(enabled), now(), now())
+	return err
+}
+func (s *Store) SetUserDisabled(id int64, disabled bool) error {
+	_, err := s.DB.Exec(`UPDATE users SET disabled = ?, updated_at = ? WHERE id = ?`, boolInt(disabled), now(), id)
 	return err
 }
 func (s *Store) DeleteUserEmail(id, userID int64) error {

@@ -26,17 +26,18 @@ type AdminDomainRow struct {
 }
 
 type AdminUserEmailRow struct {
-	ID         int64
-	UserID     int64
-	UserSub    string
-	UserEmail  string
-	UserName   string
-	Email      string
-	LocalPart  string
-	Note       string
-	Domain     string
-	TargetName string
-	Enabled    bool
+	ID           int64
+	UserID       int64
+	UserSub      string
+	UserEmail    string
+	UserName     string
+	UserDisabled bool
+	Email        string
+	LocalPart    string
+	Note         string
+	Domain       string
+	TargetName   string
+	Enabled      bool
 }
 
 type DashboardData struct {

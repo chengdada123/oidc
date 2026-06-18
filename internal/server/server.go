@@ -54,6 +54,8 @@ func NewRouter(cfg *config.Config, store *db.Store, provider *oidcbridge.Provide
 	r.Post("/admin/targets/{id}/reset-secret", s.requireAdmin(s.handleResetTargetSecret))
 	r.Post("/admin/targets/{id}/delete", s.requireAdmin(s.handleDeleteTarget))
 	r.Post("/admin/user-emails/{id}/delete", s.requireAdmin(s.handleAdminDeleteUserEmail))
+	r.Post("/admin/users/{id}/disable", s.requireAdmin(s.handleAdminDisableUser))
+	r.Post("/admin/users/{id}/enable", s.requireAdmin(s.handleAdminEnableUser))
 	return r
 }
 
@@ -70,7 +72,14 @@ func (s *Server) currentUser(r *http.Request) (*db.User, error) {
 	if sub == "" {
 		return nil, sql.ErrNoRows
 	}
-	return s.db.GetUserBySub(sub)
+	user, err := s.db.GetUserBySub(sub)
+	if err != nil {
+		return nil, err
+	}
+	if user.Disabled {
+		return nil, sql.ErrNoRows
+	}
+	return user, nil
 }
 func (s *Server) requireUser(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
