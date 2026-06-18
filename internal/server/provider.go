@@ -197,9 +197,10 @@ func (s *Server) handleProviderToken(w http.ResponseWriter, r *http.Request) {
 	_ = s.db.MarkBrokerCodeUsed(brokerCode.ID)
 	user, _ := s.db.GetUserByID(brokerCode.UserID)
 	userEmail, _ := s.db.GetUserEmailByID(brokerCode.UserEmailID)
+	preferredUsername := brokerPreferredUsername(userEmail.Email)
 	accessToken := randomCode()
 	_ = s.db.CreateBrokerToken(accessToken, target.ID, user.ID, userEmail.ID, brokerCode.Scope)
-	idToken, err := oidcbridge.BuildIDToken(issuerBase(s.cfg.BaseURL), target.ClientID, brokerCode.Nonce, brokerSubject(target.ID, userEmail.Email), userEmail.Email, brokerPreferredUsername(userEmail.Email), user.Name, oidcbridge.BrokerPrivateKeyPEM, oidcbridge.BrokerKID)
+	idToken, err := oidcbridge.BuildIDToken(issuerBase(s.cfg.BaseURL), target.ClientID, brokerCode.Nonce, brokerSubject(target.ID, userEmail.Email), userEmail.Email, preferredUsername, preferredUsername, oidcbridge.BrokerPrivateKeyPEM, oidcbridge.BrokerKID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -225,8 +226,10 @@ func (s *Server) handleProviderUserinfo(w http.ResponseWriter, r *http.Request) 
 	}
 	user, _ := s.db.GetUserByID(brokerToken.UserID)
 	userEmail, _ := s.db.GetUserEmailByID(brokerToken.UserEmailID)
+	_ = user
+	preferredUsername := brokerPreferredUsername(userEmail.Email)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_ = json.NewEncoder(w).Encode(map[string]any{"sub": brokerSubject(brokerToken.TargetID, userEmail.Email), "email": userEmail.Email, "email_verified": true, "preferred_username": brokerPreferredUsername(userEmail.Email), "name": user.Name})
+	_ = json.NewEncoder(w).Encode(map[string]any{"sub": brokerSubject(brokerToken.TargetID, userEmail.Email), "email": userEmail.Email, "email_verified": true, "preferred_username": preferredUsername, "name": preferredUsername})
 }
 
 func brokerSubject(targetID int64, email string) string {
